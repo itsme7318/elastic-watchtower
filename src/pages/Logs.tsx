@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import LogViewer from '@/components/LogViewer';
@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Filter, Download, RefreshCw } from 'lucide-react';
 
 const Logs = () => {
-  const logs = React.useMemo(() => generateLogs(30), []);
+  // The generateLogs function doesn't accept arguments, so we'll call it without any
+  const logs = React.useMemo(() => generateLogs(), []);
   
   return (
     <div className="min-h-screen bg-background">
