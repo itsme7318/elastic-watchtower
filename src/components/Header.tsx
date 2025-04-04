@@ -53,6 +53,13 @@ const Header = ({ alertCount = 3 }: { alertCount?: number }) => {
     navigate('/settings');
   };
 
+  const handleLogout = () => {
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out of the system.",
+    });
+  };
+
   return (
     <header className="sticky top-0 z-30 w-full border-b border-gray-800 bg-siem-dark glassmorphism">
       <div className="flex h-16 items-center justify-between px-4">
@@ -141,7 +148,7 @@ const Header = ({ alertCount = 3 }: { alertCount?: number }) => {
                 <User className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56 bg-siem-dark border-gray-700">
               <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate('/settings?tab=account')}>
@@ -154,12 +161,7 @@ const Header = ({ alertCount = 3 }: { alertCount?: number }) => {
                 Block Management
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => {
-                toast({
-                  title: "Logged Out",
-                  description: "You have been logged out of the system.",
-                });
-              }}>
+              <DropdownMenuItem onClick={handleLogout}>
                 Log Out
               </DropdownMenuItem>
             </DropdownMenuContent>
