@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { Activity, AlertTriangle, Laptop, Network, Server, ShieldAlert } from 'lucide-react';
-import { generateLogs, devices, alerts, generateTrafficData, countActiveAlerts } from '@/lib/mockData';
+import { useToast } from '@/hooks/use-toast';
+import { Activity, AlertTriangle, Laptop, Network, Server, ShieldAlert, Wifi } from 'lucide-react';
+import { generateLogs, alerts, generateTrafficData } from '@/lib/mockData';
 
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -11,14 +11,16 @@ import AlertsTable from '@/components/tables/AlertsTable';
 import DevicesTable from '@/components/tables/DevicesTable';
 import NetworkTrafficChart from '@/components/charts/NetworkTrafficChart';
 import LogViewer from '@/components/LogViewer';
+import RecentConnectionsWidget from '@/components/widgets/RecentConnectionsWidget';
+import { useSIEM } from '@/contexts/SIEMContext';
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const { devices, connectedDevices, blockedDevices } = useSIEM();
   const logs = React.useMemo(() => generateLogs(), []);
   const trafficData = React.useMemo(() => generateTrafficData(), []);
-  const activeAlerts = countActiveAlerts();
   
-  const onlineDevices = devices.filter(device => device.status === 'online').length;
+  const activeAlerts = alerts.filter(alert => alert.status !== 'resolved').length;
   
   // Show toast for critical alerts
   React.useEffect(() => {
@@ -55,7 +57,7 @@ const Dashboard = () => {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-8">
             <StatusCard
               title="Online Devices"
-              value={onlineDevices}
+              value={connectedDevices}
               description={`Out of ${devices.length} total devices`}
               icon={<Laptop className="h-4 w-4" />}
               variant="success"
@@ -68,20 +70,24 @@ const Dashboard = () => {
               variant={activeAlerts > 0 ? "danger" : "success"}
             />
             <StatusCard
-              title="Network Traffic"
-              value="980 MB"
-              description="Last 24 hours"
-              icon={<Activity className="h-4 w-4" />}
-              trend="up"
-              trendValue="12% from yesterday"
+              title="Blocked Devices"
+              value={blockedDevices.length}
+              description="Restricted access"
+              icon={<ShieldAlert className="h-4 w-4" />}
+              variant={blockedDevices.length > 0 ? "warning" : "success"}
             />
             <StatusCard
-              title="Monitored Services"
-              value="8"
-              description="All running normally"
-              icon={<Server className="h-4 w-4" />}
+              title="Network Status"
+              value="Secure"
+              description="All systems operational"
+              icon={<Wifi className="h-4 w-4" />}
               variant="success"
             />
+          </div>
+          
+          {/* Recent Connections Widget (only shows if there are recent connections) */}
+          <div className="mb-8">
+            <RecentConnectionsWidget />
           </div>
           
           {/* Network Traffic Chart */}
@@ -104,7 +110,7 @@ const Dashboard = () => {
               <Network className="mr-2 h-5 w-5 text-siem-blue" />
               Connected Devices
             </h2>
-            <DevicesTable devices={devices} />
+            <DevicesTable />
           </div>
           
           {/* System Logs */}

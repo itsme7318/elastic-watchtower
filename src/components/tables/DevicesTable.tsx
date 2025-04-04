@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -14,17 +14,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/hooks/use-toast';
+import { useSIEM } from '@/contexts/SIEMContext';
 
 interface DevicesTableProps {
-  devices: Device[];
   limit?: number;
 }
 
-const DevicesTable: React.FC<DevicesTableProps> = ({ devices, limit }) => {
-  const { toast } = useToast();
+const DevicesTable: React.FC<DevicesTableProps> = ({ limit }) => {
+  const { devices, blockDevice, unblockDevice, isDeviceBlocked } = useSIEM();
   const displayDevices = limit ? devices.slice(0, limit) : devices;
-  const [blockedDevices, setBlockedDevices] = useState<string[]>([]);
 
   const getDeviceIcon = (type: Device['type']) => {
     switch (type) {
@@ -42,20 +40,10 @@ const DevicesTable: React.FC<DevicesTableProps> = ({ devices, limit }) => {
   };
 
   const toggleDeviceBlock = (deviceId: string, deviceName: string) => {
-    if (blockedDevices.includes(deviceId)) {
-      setBlockedDevices(blockedDevices.filter(id => id !== deviceId));
-      toast({
-        title: "Device Unblocked",
-        description: `${deviceName} has been unblocked and can now access the network.`,
-        variant: "default",
-      });
+    if (isDeviceBlocked(deviceId)) {
+      unblockDevice(deviceId, deviceName);
     } else {
-      setBlockedDevices([...blockedDevices, deviceId]);
-      toast({
-        title: "Device Blocked",
-        description: `${deviceName} has been blocked from accessing the network.`,
-        variant: "destructive",
-      });
+      blockDevice(deviceId, deviceName);
     }
   };
 
@@ -78,27 +66,27 @@ const DevicesTable: React.FC<DevicesTableProps> = ({ devices, limit }) => {
           {displayDevices.map((device) => {
             const alerts = getAlertsForDevice(device.id);
             const activeAlerts = alerts.filter(a => a.status !== 'resolved').length;
-            const isBlocked = blockedDevices.includes(device.id);
+            const blocked = isDeviceBlocked(device.id);
             
             return (
-              <TableRow key={device.id} className={`hover:bg-siem-dark-accent ${isBlocked ? 'bg-red-900/10 border-l-2 border-l-red-500' : ''}`}>
+              <TableRow key={device.id} className={`hover:bg-siem-dark-accent ${blocked ? 'bg-red-900/10 border-l-2 border-l-red-500' : ''}`}>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {getDeviceIcon(device.type)}
                     <span className="font-medium">{device.name}</span>
-                    {isBlocked && <Badge variant="outline" className="bg-red-500/20 text-red-500">Blocked</Badge>}
+                    {blocked && <Badge variant="outline" className="bg-red-500/20 text-red-500">Blocked</Badge>}
                   </div>
                 </TableCell>
                 <TableCell>{device.ip}</TableCell>
                 <TableCell>
                   <Badge 
                     variant="outline" 
-                    className={isBlocked ? 'bg-red-500/20 text-red-500' : device.status === 'online' 
+                    className={blocked ? 'bg-red-500/20 text-red-500' : device.status === 'online' 
                       ? 'bg-green-500/20 text-green-500' 
                       : 'bg-gray-500/20 text-gray-400'
                     }
                   >
-                    {isBlocked 
+                    {blocked 
                       ? 'Blocked'
                       : device.status === 'online' 
                         ? <span className="flex items-center gap-1">
@@ -114,7 +102,7 @@ const DevicesTable: React.FC<DevicesTableProps> = ({ devices, limit }) => {
                 </TableCell>
                 <TableCell>{device.os}</TableCell>
                 <TableCell>
-                  {device.status === 'online' && !isBlocked
+                  {device.status === 'online' && !blocked
                     ? <div className="flex items-center gap-2">
                         <span>{`${device.trafficUsage} MB`}</span> 
                         <Activity className="h-3 w-3 text-green-500" />
@@ -153,7 +141,7 @@ const DevicesTable: React.FC<DevicesTableProps> = ({ devices, limit }) => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => toggleDeviceBlock(device.id, device.name)}>
-                        {isBlocked ? (
+                        {blocked ? (
                           <>
                             <Shield className="h-4 w-4 mr-2 text-green-500" />
                             Unblock Device
