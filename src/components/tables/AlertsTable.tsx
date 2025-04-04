@@ -5,6 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, findDeviceById } from '@/lib/mockData';
 import { format, parseISO } from 'date-fns';
+import { AlertTriangle, Eye, Shield, AlertOctagon, ExternalLink } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
 
 interface AlertsTableProps {
   alerts: Alert[];
@@ -12,6 +22,7 @@ interface AlertsTableProps {
 }
 
 const AlertsTable: React.FC<AlertsTableProps> = ({ alerts, limit }) => {
+  const { toast } = useToast();
   const displayAlerts = limit ? alerts.slice(0, limit) : alerts;
 
   const getSeverityColor = (severity: Alert['severity']) => {
@@ -29,6 +40,17 @@ const AlertsTable: React.FC<AlertsTableProps> = ({ alerts, limit }) => {
     }
   };
 
+  const getSeverityIcon = (severity: Alert['severity']) => {
+    switch (severity) {
+      case 'critical':
+        return <AlertOctagon className="h-4 w-4 mr-2 text-red-500" />;
+      case 'high':
+        return <AlertTriangle className="h-4 w-4 mr-2 text-orange-500" />;
+      default:
+        return <AlertTriangle className="h-4 w-4 mr-2 text-yellow-500" />;
+    }
+  };
+
   const getStatusColor = (status: Alert['status']) => {
     switch (status) {
       case 'new':
@@ -42,6 +64,22 @@ const AlertsTable: React.FC<AlertsTableProps> = ({ alerts, limit }) => {
     }
   };
 
+  const blockDevice = (deviceId: string, deviceName: string) => {
+    toast({
+      title: "Device Blocked",
+      description: `${deviceName} has been blocked due to suspicious activity.`,
+      variant: "destructive",
+    });
+  };
+
+  const blockWebsite = (url: string, alertTitle: string) => {
+    toast({
+      title: "Website Blocked",
+      description: `Access to malicious site related to "${alertTitle}" has been blocked.`,
+      variant: "destructive",
+    });
+  };
+
   return (
     <div className="rounded-md border border-gray-800">
       <Table>
@@ -52,7 +90,7 @@ const AlertsTable: React.FC<AlertsTableProps> = ({ alerts, limit }) => {
             <TableHead>Device</TableHead>
             <TableHead>Time</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Action</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -79,9 +117,34 @@ const AlertsTable: React.FC<AlertsTableProps> = ({ alerts, limit }) => {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    View
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        Actions
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Threat Response</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => device && blockDevice(device.id, device.name || 'Device')}>
+                        <Shield className="h-4 w-4 mr-2 text-red-500" />
+                        Block Device
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => blockWebsite('https://malicious-site.com', alert.title)}>
+                        <ExternalLink className="h-4 w-4 mr-2 text-red-500" />
+                        Block Website
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        {getSeverityIcon(alert.severity)}
+                        View IoCs
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             );

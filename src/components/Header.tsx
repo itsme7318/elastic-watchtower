@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Bell, BarChart2, Search, Settings } from 'lucide-react';
+import { Bell, BarChart2, Search, Settings, Shield, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const Header = ({ alertCount = 3 }: { alertCount?: number }) => {
   return (
@@ -14,6 +15,12 @@ const Header = ({ alertCount = 3 }: { alertCount?: number }) => {
             <BarChart2 className="h-8 w-8 text-siem-blue mr-2" />
             <h1 className="text-xl font-bold">ElasticSIEM</h1>
           </div>
+          <Badge variant="outline" className="hidden md:flex bg-green-500/20 text-green-500">
+            <span className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+              Monitoring Active
+            </span>
+          </Badge>
         </div>
         
         <div className="flex-1 mx-8">
@@ -39,8 +46,27 @@ const Header = ({ alertCount = 3 }: { alertCount?: number }) => {
             </Button>
           </div>
           <Button variant="ghost" size="icon">
+            <Shield className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full bg-gray-800">
+                <User className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Security Settings</DropdownMenuItem>
+              <DropdownMenuItem>Block Management</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Log Out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
